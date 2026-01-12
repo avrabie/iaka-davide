@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
-public class R2dbcConfiguration {
+public class R2dbcConverterConfiguration {
 
     @Bean
     public R2dbcCustomConversions r2dbcCustomConversions() {
