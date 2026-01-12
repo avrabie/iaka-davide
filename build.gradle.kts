@@ -36,7 +36,7 @@ dependencies {
 
     compileOnly("org.projectlombok:lombok")
     runtimeOnly("org.postgresql:postgresql")
-    runtimeOnly("org.postgresql:r2dbc-postgresql")
+    implementation("org.postgresql:r2dbc-postgresql")
     annotationProcessor("org.projectlombok:lombok")
 //    testImplementation("org.springframework.boot:spring-boot-starter-security-oauth2-client-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
