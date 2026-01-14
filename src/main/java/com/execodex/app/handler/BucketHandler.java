@@ -1,6 +1,10 @@
 package com.execodex.app.handler;
 
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -8,22 +12,11 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
-import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.model.BucketAlreadyExistsException;
-import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.core.io.buffer.DataBuffer;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 public class BucketHandler {
@@ -101,6 +94,20 @@ public class BucketHandler {
                             .body(dataBufferFlux, DataBuffer.class);
                 })
                 .onErrorResume(e -> ServerResponse.status(404).bodyValue("File not found: " + e.getMessage()));
+    }
+
+    public Mono<ServerResponse> deleteFile(ServerRequest serverRequest) {
+        String bucket = serverRequest.pathVariable("bucket");
+        String filename = serverRequest.pathVariable("filename");
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(bucket)
+                .key(filename)
+                .build();
+        return Mono.fromFuture(s3AsyncClient.deleteObject(deleteObjectRequest))
+                .flatMap(responsePublisher -> ServerResponse.accepted().build())
+                .onErrorResume(e -> ServerResponse.status(404).bodyValue("File not found: " + e.getMessage()));
+
+
     }
 
     // In the future, implement renameBucket method

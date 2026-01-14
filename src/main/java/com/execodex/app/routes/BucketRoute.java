@@ -23,7 +23,8 @@ public class BucketRoute {
                 .GET("/minio", request -> ServerResponse.ok().bodyValue("Minio Service"))
                 .POST("/minio/{bucket}", bucketHandler::createBucket)
                 .POST("/minio/{bucket}/upload", bucketHandler::uploadFile)
-                .GET("minio/{bucket}/download/{filename}", bucketHandler::downloadFile)
+                .GET("/minio/{bucket}/download/{filename}", bucketHandler::downloadFile)
+                .DELETE("/minio/{bucket}/{filename}", bucketHandler::deleteFile)
                 .build();
     }
 }
