@@ -21,7 +21,8 @@ public class MinioRoute {
 
         return RouterFunctions.route()
                 .GET("/minio", request -> ServerResponse.ok().bodyValue("Minio Service"))
-                .POST("/minio/{bucket}", minioHandler::createBucket )
+                .POST("/minio/{bucket}", minioHandler::createBucket)
+                .POST("/minio/{bucket}/upload", minioHandler::uploadFile)
                 .build();
     }
 }
