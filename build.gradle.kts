@@ -32,8 +32,10 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql") // we do need this for liquibase
     implementation("org.postgresql:r2dbc-postgresql")
 
-    // MinIO
-    implementation("io.minio:minio:8.6.0")
+    // AWS SDK v2 S3 Async
+    implementation(platform("software.amazon.awssdk:bom:2.29.50"))
+    implementation("software.amazon.awssdk:s3")
+    implementation("software.amazon.awssdk:netty-nio-client")
 
     //documentation
     implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.0.1")
