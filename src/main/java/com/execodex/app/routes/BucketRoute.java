@@ -24,7 +24,8 @@ public class BucketRoute {
                 .POST("/minio/{bucket}", bucketHandler::createBucket)
                 .POST("/minio/{bucket}/upload", bucketHandler::uploadFile)
                 .GET("/minio/{bucket}/download/{filename}", bucketHandler::downloadFile)
-                .GET("/minio/{bucket}/link/{filename}", bucketHandler::getPresignedUrl)
+                .GET("/minio/{bucket}/link2/{filename}", bucketHandler::getPresignedUrl)
+                .GET("/minio/{bucket}/link/{duration}/{filename}", bucketHandler::getPresignedUrl)
                 .DELETE("/minio/{bucket}/{filename}", bucketHandler::deleteFile)
                 .build();
     }

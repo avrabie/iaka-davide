@@ -22,6 +22,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BucketHandler {
@@ -120,6 +121,14 @@ public class BucketHandler {
     public Mono<ServerResponse> getPresignedUrl(ServerRequest serverRequest) {
         String bucket = serverRequest.pathVariable("bucket");
         String filename = serverRequest.pathVariable("filename");
+        String duration;
+        try {
+            duration = serverRequest.pathVariable("duration");
+        } catch (IllegalArgumentException e) {
+            duration = "PT10M";
+        }
+        Duration durationValue = Duration.parse(duration);
+
 
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucket)
@@ -127,7 +136,7 @@ public class BucketHandler {
                 .build();
 
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10))
+                .signatureDuration(durationValue)
                 .getObjectRequest(getObjectRequest)
                 .build();
 
