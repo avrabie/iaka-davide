@@ -10,7 +10,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.security.Principal;
 import java.time.Duration;
 import java.util.Map;
 
@@ -42,6 +41,20 @@ public class GreetingHandler {
                 .cast(JwtAuthenticationToken.class)
                 .flatMap(jwtToken -> {
                     return ServerResponse.ok().bodyValue(jwtToken);
+                });
+    }
+
+    public Mono<ServerResponse> me(ServerRequest serverRequest) {
+        return serverRequest.principal()
+                .cast(JwtAuthenticationToken.class)
+                .flatMap(jwtToken -> {
+                    String username = jwtToken.getToken().getClaimAsString("preferred_username");
+                    return ServerResponse.ok().bodyValue(Map.of(
+                            "username", username,
+                            "roles", jwtToken.getAuthorities(),
+                            "email", jwtToken.getToken().getClaimAsString("email"),
+                            "name", jwtToken.getToken().getClaimAsString("name")
+                    ));
                 });
     }
 }

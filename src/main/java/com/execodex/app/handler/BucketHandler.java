@@ -59,6 +59,7 @@ public class BucketHandler {
                 .flatMapMany(parts -> Flux.fromIterable(parts.get("file")))
                 .cast(FilePart.class)
                 .flatMap(filePart -> {
+
                     return DataBufferUtils.join(filePart.content())
                             .flatMap(dataBuffer -> {
                                 long contentLength = dataBuffer.readableByteCount();
