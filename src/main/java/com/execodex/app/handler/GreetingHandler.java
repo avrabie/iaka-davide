@@ -4,12 +4,15 @@ import com.execodex.app.domain.Appointment;
 import com.execodex.app.service.AppointmentService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.security.Principal;
 import java.time.Duration;
+import java.util.Map;
 
 @Component
 public class GreetingHandler {
@@ -19,7 +22,7 @@ public class GreetingHandler {
         this.appointmentService = appointmentService;
     }
 
-    public Mono<ServerResponse> handleHello(ServerRequest request) {
+    public Mono<ServerResponse> handleGreetings(ServerRequest request) {
         return ServerResponse.ok().bodyValue("Hello from APP");
     }
 
@@ -27,10 +30,18 @@ public class GreetingHandler {
         //
         Flux<Appointment> allAppointments = appointmentService
                 .getAllAppointments()
-                .doOnNext(IO::println)
+                .doOnNext(System.out::println)
                 .delayElements(Duration.ofMillis(400));
         return ServerResponse.ok()
                 .contentType(MediaType.TEXT_EVENT_STREAM)
                 .body(allAppointments, Appointment.class);
+    }
+
+    public Mono<ServerResponse> handleHello(ServerRequest serverRequest) {
+        return serverRequest.principal()
+                .cast(JwtAuthenticationToken.class)
+                .flatMap(jwtToken -> {
+                    return ServerResponse.ok().bodyValue(jwtToken);
+                });
     }
 }
