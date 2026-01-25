@@ -50,10 +50,7 @@ public class GreetingHandler {
                 .flatMap(jwtToken -> {
                     String username = jwtToken.getToken().getClaimAsString("preferred_username");
                     return ServerResponse.ok().bodyValue(Map.of(
-                            "username", username,
-                            "roles", jwtToken.getAuthorities(),
-                            "email", jwtToken.getToken().getClaimAsString("email"),
-                            "name", jwtToken.getToken().getClaimAsString("name")
+                            "username", username
                     ));
                 });
     }
