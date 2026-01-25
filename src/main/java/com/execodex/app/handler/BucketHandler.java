@@ -38,6 +38,7 @@ public class BucketHandler {
 
     public Mono<ServerResponse> createBucket(ServerRequest serverRequest) {
         String bucket = serverRequest.pathVariable("bucket");
+        var location = serverRequest.uri();
 
         CreateBucketRequest bucketRequest = CreateBucketRequest.builder().bucket(bucket).build();
 
@@ -45,7 +46,14 @@ public class BucketHandler {
                 .thenReturn("Bucket created successfully")
                 .onErrorResume(e -> e instanceof BucketAlreadyExistsException || e instanceof BucketAlreadyOwnedByYouException,
                         e -> Mono.just("Bucket already exists"))
-                .flatMap(message -> ServerResponse.ok().bodyValue(message))
+                .flatMap(message -> {
+                    if ("Bucket already exists".equals(message)) {
+                        return ServerResponse.ok()
+                                .header(HttpHeaders.LOCATION, location.toString())
+                                .bodyValue(message);
+                    }
+                    return ServerResponse.created(location).bodyValue(location);
+                })
                 .onErrorResume(e -> ServerResponse.status(500).bodyValue("Error: " + e.getMessage()))
                 ;
     }
@@ -117,6 +125,21 @@ public class BucketHandler {
                 .onErrorResume(e -> ServerResponse.status(404).bodyValue("File not found: " + e.getMessage()));
 
 
+    }
+
+    public Mono<ServerResponse> getAllFiles(ServerRequest serverRequest) {
+        String bucket = serverRequest.pathVariable("bucket");
+
+        ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                .bucket(bucket)
+                .build();
+
+        return Mono.fromFuture(s3AsyncClient.listObjectsV2(listRequest))
+                .map(response -> response.contents().stream()
+                        .map(S3Object::key)
+                        .toList())
+                .flatMap(keys -> ServerResponse.ok().bodyValue(keys))
+                .onErrorResume(e -> ServerResponse.status(500).bodyValue("Error: " + e.getMessage()));
     }
 
     public Mono<ServerResponse> getPresignedUrl(ServerRequest serverRequest) {

@@ -22,6 +22,7 @@ public class BucketRoute {
         return RouterFunctions.route()
                 .GET("/minio", request -> ServerResponse.ok().bodyValue("Minio Service"))
                 .POST("/minio/{bucket}", bucketHandler::createBucket)
+                .GET("/minio/{bucket}", bucketHandler::getAllFiles)
                 .POST("/minio/{bucket}/upload", bucketHandler::uploadFile)
                 .GET("/minio/{bucket}/download/{filename}", bucketHandler::downloadFile)
                 .GET("/minio/{bucket}/link2/{filename}", bucketHandler::getPresignedUrl)
