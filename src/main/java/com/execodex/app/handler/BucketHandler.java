@@ -1,7 +1,6 @@
 package com.execodex.app.handler;
 
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -67,22 +66,24 @@ public class BucketHandler {
                 .flatMapMany(parts -> Flux.fromIterable(parts.get("file")))
                 .cast(FilePart.class)
                 .flatMap(filePart -> {
+                    String filename = filePart.filename();
+                    long contentLength = filePart.headers().getContentLength();
 
-                    return DataBufferUtils.join(filePart.content())
-                            .flatMap(dataBuffer -> {
-                                long contentLength = dataBuffer.readableByteCount();
-                                PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                                        .bucket(bucket)
-                                        .key(filePart.filename())
-                                        .contentType(filePart.headers().getContentType().toString())
-                                        .contentLength(contentLength)
-                                        .build();
+                    PutObjectRequest.Builder putObjectRequestBuilder = PutObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(filename)
+                            .contentType(Optional.ofNullable(filePart.headers().getContentType())
+                                    .map(MediaType::toString)
+                                    .orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE));
 
-                                return Mono.fromFuture(s3AsyncClient.putObject(putObjectRequest,
-                                                AsyncRequestBody.fromByteBuffer(dataBuffer.asByteBuffer())))
-                                        .doFinally(signalType -> DataBufferUtils.release(dataBuffer))
-                                        .thenReturn(filePart.filename());
-                            });
+                    if (contentLength > 0) {
+                        putObjectRequestBuilder.contentLength(contentLength);
+                    }
+
+                    AsyncRequestBody asyncRequestBody = AsyncRequestBody.fromPublisher(filePart.content().map(DataBuffer::asByteBuffer));
+
+                    return Mono.fromFuture(s3AsyncClient.putObject(putObjectRequestBuilder.build(), asyncRequestBody))
+                            .thenReturn(filename);
                 })
                 .collectList()
                 .flatMap(filenames -> ServerResponse.ok().bodyValue("Uploaded files: " + String.join(", ", filenames)))
